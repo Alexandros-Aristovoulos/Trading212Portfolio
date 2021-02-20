@@ -17,7 +17,7 @@ You need to name this file as orders and replace my own file.
 You can also use your gmail (if it receives the emails from Trading212) in order to automatically update the orders data. Beware my script only gets the data
 from the "Contract Note Statement from Trading 212" so if you are informed about an order via the "Monthly statement" the code won't know anything about it.
 
-**Change the variables GET_EMAIL and EXTRA_SEARCH_ARGS in the myPortofolio.py accordingly.**
+**Change the variables GET_EMAIL and EXTRA_SEARCH_ARGS in the myPortfolio.py accordingly.**
 
 ### Dependencies
 - Gmail api (follow the steps 1 and 2 from [here](https://developers.google.com/gmail/api/quickstart/python) and add the credentials.json in the project folder)
