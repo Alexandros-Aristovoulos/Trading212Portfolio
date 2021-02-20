@@ -19,6 +19,12 @@ from the "Contract Note Statement from Trading 212" so if you are informed about
 
 **Change the variables GET_EMAIL and EXTRA_SEARCH_ARGS in the myPortfolio.py accordingly.**
 
+### Updates
+Changed the logic we use to find the stocks and get their price. 
+* First we search for the stock in the London stock exchange because that's the exchange Trading212 "prefers". To do that we just add ".L" at the end of the stock name. 
+* If we dont find the stock this way then we try with the original name.(That's how we find most of the US stocks)
+* If none of the above work then we use the isin and get the first ticker that matches it. Then using that ticker we get the price. 
+
 ### Dependencies
 - Gmail api (follow the steps 1 and 2 from [here](https://developers.google.com/gmail/api/quickstart/python) and add the credentials.json in the project folder)
 - [Email](https://pypi.org/project/email/)
@@ -29,4 +35,3 @@ from the "Contract Note Statement from Trading 212" so if you are informed about
 - [Forex python](https://pypi.org/project/forex-python/)
 - [Numpy](https://numpy.org/install/)
 - [Matplotlib](https://pypi.org/project/matplotlib/)
-
