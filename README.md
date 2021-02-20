@@ -2,7 +2,7 @@
 ### Description
 The goal of this project is to get your Trading212 portfolio, calculate your returns and show everything in a graph without having to log in to the trading 212 website. 
 This is achieved by getting the order information from a provided csv and/or the gmail of the user and searching in yahoo finance for the current price of the stocks.
-For a more interactive version of this project check out [Trading212DesktopApp](https://github.com/alex999ar/Trading212DesktopApp) which is a fully functionl desktop app.
+For a more interactive version of this project check out [Trading212DesktopApp](https://github.com/alex999ar/Trading212DesktopApp) which is a fully functional desktop app.
 
 ### Image example of script output
 ![](/example_output.png)
