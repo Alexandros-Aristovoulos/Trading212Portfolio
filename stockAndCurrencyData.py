@@ -136,65 +136,80 @@ def makeStats(dfMail):
         #add all the data to an array
         formattedPortfolio.append([ticker, isin, quantity, invested, averagePrice, withdrew, lastClosedProfit, fees, totalFees])
 
-    print("-----------------------------------------------Formated Portfolio Data-----------------------------------------------")
     dfFormattedPortfolio = pd.DataFrame(data = formattedPortfolio[1:][0:],       # values
                                         columns = formattedPortfolio[0][0:])     # 1st row as the column names
     #drop rows where quantity == 0
     dfFormattedPortfolio = dfFormattedPortfolio[dfFormattedPortfolio["Quantity"] != 0]
     #reset the index
     dfFormattedPortfolio.reset_index(drop=True, inplace=True)
+
+    #get the real stock names
+    stocks = dfFormattedPortfolio["Ticker"].tolist()
+    isins = dfFormattedPortfolio["ISIN"].tolist()
+    for i in range(len(stocks)):
+        #first try in the london stock exchange (because Trading212 uses primarily this exchange)
+        try:
+            si.get_live_price(stocks[i]+".L")
+            stocks[i] = stocks[i]+".L"
+        except:
+            #if it fails try with the normal name
+            try:                
+                si.get_live_price(stocks[i])
+            #if this also fails take the first stock name that matches the isin
+            except:
+                #search in yahoo finance with the isin
+                url = "https://query2.finance.yahoo.com/v1/finance/search"
+                params = {'q': isins[i], 'quotesCount': 1, 'newsCount': 0}
+                r = requests.get(url, params=params)
+                #get all the data for this isin
+                data = r.json()
+                #get the stock symbol for this isin
+                symbol = data['quotes'][0]['symbol']
+                stocks[i] = symbol
+                si.get_live_price(stocks[i])
+
+    dfFormattedPortfolio["Ticker"] = pd.DataFrame(stocks)
+
+    print("-----------------------------------------------Formated Portfolio Data-----------------------------------------------")
     print(dfFormattedPortfolio)
     return dfFormattedPortfolio
 
 def yahooInfo(dfFormattedPortfolio):
     #get all the stock names
+    stocks = dfFormattedPortfolio["Ticker"].tolist()
+    #get all the isin
     isins = dfFormattedPortfolio["ISIN"].tolist()
     #get the number of share we have
     shares = (dfFormattedPortfolio["Quantity"]).tolist()
-   
-    #get currency rates to convert everything to euros
-    print("Getting currency exchange rates")
-    c = CurrencyRates()                                                 
-    usdEurRate = c.get_rate('USD', 'EUR')
+
+    #get the rates
+    c = CurrencyRates()
+    usdEurRate = c.get_rate('USD', 'EUR') 
     gbpEurRate = c.get_rate('GBP', 'EUR')
-    nokEurRate = c.get_rate('NOK', 'EUR')   
+    nokEurRate = c.get_rate('NOK', 'EUR')                    
+
 
     #the list where all the stocks values (in euros) will be saved
     eurVal = []
 
-    stocks = []
-
     #get the current value of each stock
     print("Getting the current value of each stock")
-    for i in range(len(isins)): 
+    for i in range(len(stocks)):
         try:
-
-            #search in yahoo finance with the isin
-            url = "https://query2.finance.yahoo.com/v1/finance/search"
-            params = {'q': isins[i], 'quotesCount': 1, 'newsCount': 0}
-            r = requests.get(url, params=params)
-            #get all the data for this isin
-            data = r.json()
-            #get the stock symbol for this isin
-            symbol = data['quotes'][0]['symbol']
-
-            #add the symbol to the stocks
-            stocks.append(symbol)
-
             #get the current value of the stock in whatever currency
-            curPrice = si.get_live_price(symbol) * shares[i]
+            curPrice = si.get_live_price(stocks[i]) * shares[i]            
            
             #get the currency the stock is traded in by going to that url
             url = "https://finance.yahoo.com/quote/"
             #get the html page of the stock
-            r = requests.get(str(url+symbol))
+            r = requests.get(str(url+stocks[i]))
             #get the html text
             soup = bs(r.text, "lxml")
             #find the div which contains the words "Currency in" and get the text
             currencyInfo = soup.find("div", string=re.compile("Currency in"))
             #get the currency (the word after the words "Currency in")
             currency = str(split_text(currencyInfo.text, "Currency in", "")) 
-
+            
             #convert everything to euros if necessary
             if currency == "USD":
                 curPrice = usdEurRate*curPrice
@@ -202,11 +217,14 @@ def yahooInfo(dfFormattedPortfolio):
                 curPrice = gbpEurRate*curPrice*0.01
             elif currency == "NOK":
                 curPrice = nokEurRate*curPrice
+
             #save the value in euros in this list
             eurVal.append(round(curPrice, 2))
             
+            
         #if the stock name doesn't exist in yahoo finance print error message
         except Exception as e:
+            print('test2')
             print(e)
             #assign the value in euros to NA (not available)
             eurVal.append(float("nan"))
@@ -218,7 +236,7 @@ def yahooInfo(dfFormattedPortfolio):
     tempProfit = [float("nan")] * len(isins)
 
     #remove from current value the total value currently invested
-    for i in range(len(tempProfit)):
+    for i in range(len(isins)):
         if eurVal[i] == eurVal[i]:
             tempProfit[i] = eurVal[i] - investedValue[i]
     

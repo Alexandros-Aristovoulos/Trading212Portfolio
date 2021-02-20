@@ -3,7 +3,7 @@ import getStocksFromGmail
 import stockAndCurrencyData
 import allTheGraphs
 
-GET_EMAIL = False
+GET_EMAIL = True
 EXTRA_SEARCH_ARGS = "after:2021-02-14"
 
 def main():
