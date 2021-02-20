@@ -27,6 +27,8 @@ Changed the logic we use to find the stocks and get their price.
 exchanges) 
 
 ### Dependencies
+Gmail api and Email are optional. If you don't want to use them then comment out the (import getStocksFromGmail) and change the global variable
+GET_EMAIL to False in myPortfolio.py
 - Gmail api (follow the steps 1 and 2 from [here](https://developers.google.com/gmail/api/quickstart/python) and add the credentials.json in the project folder)
 - [Email](https://pypi.org/project/email/)
 - [Pandas](https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html)
