@@ -22,7 +22,7 @@ from the "Contract Note Statement from Trading 212" so if you are informed about
 ### Updates
 Changed the logic we use to find the stocks and get their price. 
 * First we search for the stock in the London stock exchange because that's the exchange Trading212 "prefers". To do that we just add ".L" at the end of the stock name. 
-* If we don't find the stock this way then we try with the original name.(That's how we find most of the US stocks)
+* If we don't find the stock this way then we try with the original name. (That's how we find most of the US stocks)
 * If none of the above work then we use the isin and get the first ticker that matches it. Then using that ticker we get the price. (That's how we find stocks in other
 exchanges) 
 
