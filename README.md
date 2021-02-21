@@ -25,7 +25,7 @@ follow the [instructions below](https://github.com/alex999ar/Trading212Portfolio
 You will have to use only the csv file and set the variable GET_EMAIL to false**
 
 ### Change or add currencies
-1. Go to the yahooInfo function of `src\python\stockAndCurrencyData.py` and locate where we get the currency rates
+1. Go to the yahooInfo function of `stockAndCurrencyData.py` and locate where we get the currency rates
 ![](/rate_images/rates1.png)
 
 * Here you can add more currency conversions. For example to get the conversion rate from Swedish Krona to Euro add `sekEuroRate = c.getRate('SEK', 'EUR')`
