@@ -157,18 +157,29 @@ def makeStats(dfMail):
                 si.get_live_price(stocks[i])
             #if this also fails take the first stock name that matches the isin
             except:
-                #search in yahoo finance with the isin
-                url = "https://query2.finance.yahoo.com/v1/finance/search"
-                params = {'q': isins[i], 'quotesCount': 1, 'newsCount': 0}
-                r = requests.get(url, params=params)
-                #get all the data for this isin
-                data = r.json()
-                #get the stock symbol for this isin
-                symbol = data['quotes'][0]['symbol']
-                stocks[i] = symbol
-                si.get_live_price(stocks[i])
+                try:
+                    #search in yahoo finance with the isin
+                    url = "https://query2.finance.yahoo.com/v1/finance/search"
+                    params = {'q': isins[i], 'quotesCount': 1, 'newsCount': 0}
+                    r = requests.get(url, params=params)
+                    #get all the data for this isin
+                    data = r.json()
+                    #get the stock symbol for this isin
+                    symbol = data['quotes'][0]['symbol']
+                    stocks[i] = symbol
+                    si.get_live_price(stocks[i])
+                except:
+                    print("This ticker couldn't be found in any stock exchange")
+                    stocks[i] = "NaN"
 
     dfFormattedPortfolio["Ticker"] = pd.DataFrame(stocks)
+
+    #drop rows where Ticker == "NaN"
+    dfFormattedPortfolio = dfFormattedPortfolio[dfFormattedPortfolio["Ticker"] != "NaN"]
+    #reset the index
+    dfFormattedPortfolio.reset_index(drop=True, inplace=True)
+    dfFormattedPortfolio["Ticker"] = pd.DataFrame(stocks)
+
 
     print("-----------------------------------------------Formated Portfolio Data-----------------------------------------------")
     print(dfFormattedPortfolio)
