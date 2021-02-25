@@ -6,7 +6,7 @@ from yahoo_fin import stock_info as si
 import pandas as pd
 from usefulFunctions import split_text
 
-def makeStats(dfMail): 
+def makeStats(dfMail, USER_CURRENCY): 
     pd.set_option("display.max_rows", None, "display.max_columns", None)
 
     #initialise the dataframes
@@ -25,13 +25,14 @@ def makeStats(dfMail):
 
         #re-arrange the columns
         dfOrder = dfOrder.reindex(['Date', 'Time', 'ID', 'Ticker','ISIN', 'Order Type', 'Direction', 'No. of shares', 
-                                     'Total (EUR)', 'Finra fee (EUR)', 'Stamp duty reserve tax (EUR)'], axis=1)
+                                     'Total ('+USER_CURRENCY+')', 'Finra fee ('+USER_CURRENCY+')', 'Stamp duty reserve tax ('+USER_CURRENCY+')'], axis=1)
 
         #rename the columns
-        dfOrder = dfOrder.rename(columns={"No. of shares": "Quantity", "Total (EUR)": "Total", 'Finra fee (EUR)': 'Commission', 
-                                            'Stamp duty reserve tax (EUR)' : 'Charges and Fees', 'ID' : 'Id'})
+        dfOrder = dfOrder.rename(columns={"No. of shares": "Quantity", 'Total ('+USER_CURRENCY+')': "Total", 'Finra fee ('+USER_CURRENCY+')': 'Commission', 
+                                            'Stamp duty reserve tax ('+USER_CURRENCY+')' : 'Charges and Fees', 'ID' : 'Id'})
         #capitalise Buy and Sell
         dfOrder['Direction'] = dfOrder['Direction'].str.capitalize()
+
 
         print("-----------------------------------------------Order Data-----------------------------------------------")
         print(dfOrder)
@@ -185,7 +186,7 @@ def makeStats(dfMail):
     print(dfFormattedPortfolio)
     return dfFormattedPortfolio
 
-def yahooInfo(dfFormattedPortfolio):
+def yahooInfo(dfFormattedPortfolio, USER_CURRENCY):
     #get all the stock names
     stocks = dfFormattedPortfolio["Ticker"].tolist()
     #get all the isin
@@ -195,20 +196,25 @@ def yahooInfo(dfFormattedPortfolio):
 
     #get the rates
     c = CurrencyRates()
-    usdEurRate = c.get_rate('USD', 'EUR') 
-    gbpEurRate = c.get_rate('GBP', 'EUR')
-    nokEurRate = c.get_rate('NOK', 'EUR')                    
+    if USER_CURRENCY != "USD":
+        usdToUserCurrencyRate = c.get_rate('USD', USER_CURRENCY)
+    if USER_CURRENCY != "EUR":
+        euroToUserCurrencyRate = c.get_rate('EUR', USER_CURRENCY)
+    if USER_CURRENCY != "GBP":
+        gbpToUserCurrencyRate = c.get_rate('GBP', USER_CURRENCY)
+    if USER_CURRENCY != "NOK":
+        nokToUserCurrencyRate = c.get_rate('NOK', USER_CURRENCY)                   
 
 
-    #the list where all the stocks values (in euros) will be saved
-    eurVal = []
+    #the list where all the stocks values (in the users currency) will be saved
+    userCurrencyVal = []
 
     #get the current value of each stock
     print("Getting the current value of each stock")
     for i in range(len(stocks)):
         try:
             #get the current value of the stock in whatever currency
-            curPrice = si.get_live_price(stocks[i]) * shares[i]            
+            curPrice = si.get_live_price(stocks[i]) * shares[i] 
            
             #get the currency the stock is traded in by going to that url
             url = "https://finance.yahoo.com/quote/"
@@ -219,26 +225,39 @@ def yahooInfo(dfFormattedPortfolio):
             #find the div which contains the words "Currency in" and get the text
             currencyInfo = soup.find("div", string=re.compile("Currency in"))
             #get the currency (the word after the words "Currency in")
-            currency = str(split_text(currencyInfo.text, "Currency in", "")) 
+            stockCurrency = str(split_text(currencyInfo.text, "Currency in", ""))
             
-            #convert everything to euros if necessary
-            if currency == "USD":
-                curPrice = usdEurRate*curPrice
-            elif currency == "GBp":
-                curPrice = gbpEurRate*curPrice*0.01
-            elif currency == "NOK":
-                curPrice = nokEurRate*curPrice
+            #convert everything to user's currency
+            #if its the same currency with the user no need to do anything
+            if stockCurrency == USER_CURRENCY:
+                curPrice = curPrice
+            #check if USER_CURRENCY == GBP but stockCurrency == GBp to move the decimals
+            elif stockCurrency == "GBp" and USER_CURRENCY == "GBP":
+                curPrice *= 0.01
+            #change the currency if it is different
+            elif stockCurrency == "USD":
+                curPrice = usdToUserCurrencyRate*curPrice
+            elif stockCurrency == "GBp":
+                curPrice = gbpToUserCurrencyRate*curPrice*0.01
+            elif stockCurrency == "NOK":
+                curPrice = nokToUserCurrencyRate*curPrice
+            else:
+                print("Trying to get the currency rate for " + stockCurrency)
+                try:
+                    tempRate = c.get_rate(stockCurrency, USER_CURRENCY)
+                    curPrice = tempRate * curPrice
+                except:
+                    print("could not get the currency rate for " + stockCurrency)
+                    curPrice = float("NaN")
 
-            #save the value in euros in this list
-            eurVal.append(round(curPrice, 2))
-            
+            #append the value in the correct currency
+            userCurrencyVal.append(round(curPrice,2))
             
         #if the stock name doesn't exist in yahoo finance print error message
         except Exception as e:
-            print('test2')
+            print("This exception should never occur something is terribly wrong")
             print(e)
-            #assign the value in euros to NA (not available)
-            eurVal.append(float("nan"))
+            userCurrencyVal.append(float("NaN"))
 
     #get the value we have currently invested
     investedValue= (dfFormattedPortfolio["Invested"] - dfFormattedPortfolio["Withdrew"]).tolist()
@@ -248,8 +267,8 @@ def yahooInfo(dfFormattedPortfolio):
 
     #remove from current value the total value currently invested
     for i in range(len(isins)):
-        if eurVal[i] == eurVal[i]:
-            tempProfit[i] = eurVal[i] - investedValue[i]
+        if userCurrencyVal[i] == userCurrencyVal[i]:
+            tempProfit[i] = userCurrencyVal[i] - investedValue[i]
     
     #append everything in this array
     liveStockData = [["Stock", "ISIN", "Quantity", "Average Price", "Invested Value", "Current Investment Value", "Profit"]]
@@ -258,7 +277,7 @@ def yahooInfo(dfFormattedPortfolio):
     averagePrice = dfFormattedPortfolio["Average Price"].tolist()
 
     for i in range(len(stocks)):
-        liveStockData.append([stocks[i], isins[i], quantity[i], averagePrice[i], investedValue[i], eurVal[i], tempProfit[i]])    
+        liveStockData.append([stocks[i], isins[i], quantity[i], averagePrice[i], investedValue[i], userCurrencyVal[i], tempProfit[i]])    
 
     print("-----------------------------------------------Current Positions' Value-----------------------------------------------")
 
@@ -266,4 +285,3 @@ def yahooInfo(dfFormattedPortfolio):
                                         columns = liveStockData[0][0:])     # 1st row as the column names
     print(dfLivePositionValues)
     return dfLivePositionValues
-

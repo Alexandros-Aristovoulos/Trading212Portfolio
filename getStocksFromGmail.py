@@ -12,19 +12,14 @@ pd.set_option("display.max_rows", None, "display.max_columns", None)
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-def getAllInfo(EXTRA_SEARCH_ARGS):
+def getAllInfo(EXTRA_SEARCH_ARGS, USER_CURRENCY):
     #connect to the gmail account
     service = getService()
     #get the portfolio info
-    dfMail = getMyPortfolio(service, EXTRA_SEARCH_ARGS)
+    dfMail = getMyPortfolio(service, EXTRA_SEARCH_ARGS, USER_CURRENCY)
     return pd.DataFrame(dfMail)
 
-def getMyPortfolio(service, EXTRA_SEARCH_ARGS):
-    #get the portofolio info
-    dfMail = getMyPortofolio(service, EXTRA_SEARCH_ARGS)
-    return pd.DataFrame(dfMail)
-
-def getMyPortofolio(service, EXTRA_SEARCH_ARGS):
+def getMyPortfolio(service, EXTRA_SEARCH_ARGS, USER_CURRENCY):
     #search for label
     searchString = "from:(@trading212.com) subject:(Contract Note Statement from Trading 212)" + EXTRA_SEARCH_ARGS
     #get the id list of the emails that match as well as their number
@@ -39,7 +34,7 @@ def getMyPortofolio(service, EXTRA_SEARCH_ARGS):
     if numberResults > 0:
         #loop for each email
         for i in range (numberResults):
-            get_message(service, 'me', list_of_matching_ids[i], gmailStockData)
+            get_message(service, 'me', list_of_matching_ids[i], gmailStockData, USER_CURRENCY)
         #return the data
         return pd.DataFrame(data = gmailStockData[1:][0:],       # values
                             columns = gmailStockData[0][0:])     # 1st row as the column names
@@ -103,7 +98,7 @@ def search_messages(service, user_id, searchString):
 
 
 
-def get_message(service, user_id, msg_id, gmailStockData):
+def get_message(service, user_id, msg_id, gmailStockData, USER_CURRENCY):
     try:
         #get the message in raw format
         message = service.users().messages().get(userId=user_id, id=msg_id, format='raw').execute()
@@ -124,14 +119,14 @@ def get_message(service, user_id, msg_id, gmailStockData):
             if part.get_content_type() == 'text/plain':
                 #prints the raw text that we want
                 text = part.get_payload()              
-                get_formatted_text(text, gmailStockData)
+                get_formatted_text(text, gmailStockData, USER_CURRENCY)
     
     except Exception as error:
         print('An error occurred in the get_message function: %s' % error)
 
 
 
-def get_formatted_text(text, gmailStockData):
+def get_formatted_text(text, gmailStockData, USER_CURRENCY):
     #find number of positions in email
     posNum = text.count("POS")
 
@@ -157,8 +152,8 @@ def get_formatted_text(text, gmailStockData):
         quantity, pricePerUnit, total, date, time, commission, chargesAndFees, orderType = usefulInfo.split('\n', 7)
 
         #clean the variables from the word EUR
-        pricePerUnit = pricePerUnit.split("EUR")[0]
-        total = total.split("EUR")[0]
+        pricePerUnit = pricePerUnit.split(USER_CURRENCY)[0]
+        total = total.split(USER_CURRENCY)[0]
 
         #remove all spaces
         quantity = quantity.strip()        
@@ -166,8 +161,8 @@ def get_formatted_text(text, gmailStockData):
         total = total.strip()
         date = date.strip()
         time = time.strip()
-        commission = split_text(commission, "", "EUR")
-        chargesAndFees = split_text(chargesAndFees, "", "EUR")
+        commission = split_text(commission, "", USER_CURRENCY)
+        chargesAndFees = split_text(chargesAndFees, "", USER_CURRENCY)
         orderType = split_text(orderType, "", "\r")
 
         #convert all numbers to float
