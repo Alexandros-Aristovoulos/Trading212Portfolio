@@ -22,7 +22,7 @@ from the "Contract Note Statement from Trading 212" so if you are informed about
 follow the [instructions below](https://github.com/alex999ar/Trading212Portfolio#change-currency). 
 
 ### Change currency
-Go to `src\python\myPortfolio.py` and change the variable USER_CURRENCY accordingly
+Go to `myPortfolio.py` and change the variable USER_CURRENCY accordingly
 
 For example for GBP you need to have `USER_CURRENCY = "GBP"`
 
