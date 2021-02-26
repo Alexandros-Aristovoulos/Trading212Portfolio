@@ -22,9 +22,9 @@ from the "Contract Note Statement from Trading 212" so if you are informed about
 follow the [instructions below](https://github.com/alex999ar/Trading212Portfolio#change-currency). 
 
 ### Change currency
-Go to `myPortfolio.py` and change the variable USER_CURRENCY accordingly
+Go to `myPortfolio.py` and change the variables USER_CURRENCY and USER_SYMBOL accordingly
 
-For example for GBP you need to have `USER_CURRENCY = "GBP"`
+For example for GBP you need to have `USER_CURRENCY = "GBP"` and `USER_SYMBOL = "£"`
 
 ### Updates
 Changed the logic we use to find the stocks and get their price. 
