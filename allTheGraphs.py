@@ -5,7 +5,7 @@ import pandas as pd
 from forex_python.converter import CurrencyRates
 
 
-def graph(dfLivePositionValues):
+def graph(dfLivePositionValues, USER_CURRENCY):
     ############Invested money pie chart###############
 
     #get the stock names
@@ -37,7 +37,7 @@ def graph(dfLivePositionValues):
 
         percentage = "{:.2f}".format(100*totalVal[i]/sum(totalVal))
         percentage = str(percentage) + "%"
-        ax1.annotate(str(totalVal[i])+"€\n"+percentage, xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
+        ax1.annotate(str(totalVal[i])+USER_CURRENCY+"\n"+percentage, xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
                     horizontalalignment=horizontalalignment, **kw)
 
     ax1.legend(wedges, stocks, title ="Stocks", loc ="best") 
@@ -139,7 +139,7 @@ def graph(dfLivePositionValues):
 
         percentage = "{:.2f}".format(100*totalVal[i]/sum(totalVal))
         percentage = str(percentage) + "%"
-        ax4.annotate(str(totalVal[i])+"€\n"+percentage, xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
+        ax4.annotate(str(totalVal[i])+USER_CURRENCY+"\n"+percentage, xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
                     horizontalalignment=horizontalalignment, **kw)
 
 

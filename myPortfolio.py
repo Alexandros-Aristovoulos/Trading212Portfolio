@@ -8,6 +8,8 @@ EXTRA_SEARCH_ARGS = "after:2021-02-14"
 #choose the currency of your account (examples: EUR, USD, GBP, NOK)
 #THIS IS CASE SENSITIVE
 USER_CURRENCY = "EUR"
+#choose the symbol of your currency (examples: €, $, £, kr)
+USER_SYMBOL = "€"
 
 def main():
     #get all the info from gmail in an csv
@@ -23,7 +25,7 @@ def main():
     if not dfFormattedPortfolio.empty:
         dfLivePositionValues = stockAndCurrencyData.yahooInfo(dfFormattedPortfolio, USER_CURRENCY)
         #graph everything
-        allTheGraphs.graph(dfLivePositionValues)
+        allTheGraphs.graph(dfLivePositionValues, USER_SYMBOL)
     
 if __name__ == '__main__':
     main()
